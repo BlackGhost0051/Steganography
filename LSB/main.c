@@ -1,3 +1,4 @@
+//#include <SDL2/SDL.h>
 #include <stdio.h>
 
 
@@ -12,15 +13,23 @@ void readFile(char* fileName){
     }
 
     int byte;
+    int i = 0;
     while((byte = fgetc(file)) != EOF){
-        
-        printf("%02x\n", byte);
-        /*
+
+//        printf("%02x\t", byte);
+
         for (int i = 7; i >= 0; i--) {
             printf("%d", (byte >> i) & 1);
         }
-        printf("\n");
-        */
+        printf("\t");
+
+        if(i %  12 == 0){
+            printf("\n");
+        }
+        
+        i++;
+   
+        
     }
 
     fclose(file);
@@ -32,7 +41,7 @@ void readFile(char* fileName){
 
 int main(){
 
-    char fileName[] = "image.bmp";
+    char fileName[] = "task.png";
 
     readFile(fileName);
 
