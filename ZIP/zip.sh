@@ -1,1 +1,3 @@
-cat image.png folder.zip > image_with_zip.png
+#! /bin/bash
+
+cat image.png folder.zip >> image_with_zip.png
