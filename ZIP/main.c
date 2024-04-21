@@ -2,8 +2,7 @@
 
 int hide_zip_in_png(char *imageName, char *zipName, char *outputName){
     FILE *imageFile, *zipFile, *outputFile;
-    char buffer[1024];
-    size_t bytesRead;
+    int byte;
 
     imageFile = fopen(imageName,"rb");
     zipFile = fopen(zipName,"rb");
@@ -12,23 +11,18 @@ int hide_zip_in_png(char *imageName, char *zipName, char *outputName){
         printf("Error open file");
         return 1;
     }
-    
     outputFile = fopen(outputName,"wb");
     if(outputFile == NULL){
         printf("Output File Error");
         return 1;
     }
 
-
-
-    while((bytesRead = fread(buffer, 1, sizeof(buffer), imageFile)) > 0){
-        fwrite(buffer, 1, bytesRead, outputFile);
+    while ((byte = fgetc(imageFile)) != EOF) {   
+        fputc(byte, outputFile);
     }
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), zipFile)) > 0) {
-        fwrite(buffer, 1, bytesRead, outputFile);
+    while ((byte = fgetc(zipFile)) != EOF) {
+        fputc(byte, outputFile);
     }
-
-
 
     fclose(outputFile);
     fclose(imageFile);
@@ -36,7 +30,6 @@ int hide_zip_in_png(char *imageName, char *zipName, char *outputName){
 
     return 0;
 }
-
 
 int main(){
     char imageName[] = "image.png";
