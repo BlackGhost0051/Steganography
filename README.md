@@ -1,5 +1,5 @@
 # Steganography
 
-1. Whitespace Language
-2. LSB
-3. ZIP
+1. [Whitespace Language](./Whitespace%20Language/README.md)
+2. [LSB](./LSB/README.md)
+3. [ZIP](./ZIP/README.md)
