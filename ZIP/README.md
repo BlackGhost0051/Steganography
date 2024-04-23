@@ -13,6 +13,8 @@
 
 You need to have the **folder.zip** and **image.png** files in the project folder.
 
+Run the program and it will create an **output.png** in which the zip will be hidden.
+
 ## How to install and run?
 ### Linux
 
