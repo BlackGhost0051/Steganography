@@ -1,5 +1,8 @@
 # ZIP
 
+Status: in development;
+
+This program hides the zip archive in the files.
 
 ## Content 
 1. [How does the program work?](#how-does-the-program-work)
