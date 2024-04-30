@@ -1,8 +1,61 @@
 #include <stdio.h>
 
 
+void hideInPng(char* fileName, char *hideFileName){
+    int byte, i;
+    unsigned char IDATStructure[] = {0x49, 0x44, 0x41, 0x54}; // IDAT 49 44 41 54
+    unsigned char IHDRStructure[] = {0x49, 0x48, 0x44, 0x52}; // IHDR 49 48 44 52
+    int j = 0, k = 0;
+    int idatIndex;
+    int ihdrIndex;
 
-void checkStructure(char* fileName){
+    FILE* file = fopen(fileName,"rb");
+    if(file == NULL){
+        return;
+    }
+    
+
+    while((byte = fgetc(file)) != EOF){
+        if((unsigned char)byte == IDATStructure[j]){
+            j++;
+
+        
+            if(j == sizeof(IDATStructure)){
+                idatIndex = ftell(file);            // IDAT -> T byte
+                printf("\nIDAT = %d\n", idatIndex);
+            }
+        } else {
+            j = 0;
+        }
+
+
+
+        if((unsigned char)byte == IHDRStructure[k]){
+            k++;
+
+        
+            if(k == sizeof(IHDRStructure)){
+                ihdrIndex = ftell(file);            // IHDR -> R byte
+                printf("\nIHDR = %d\n", ihdrIndex);
+                for(i = 0; i < 8; i++){
+                    int nextByte = fgetc(file);
+                    printf("%d ", nextByte);
+                }
+            }
+        } else {
+            k = 0;
+        }
+    }
+
+
+
+
+
+    fclose(file);
+    return;
+}
+
+void checkStructure(char* fileName, char *hideFileName){
     int byte, i;
     unsigned char fileStructure[8];
     unsigned char pngStructure[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
@@ -59,6 +112,7 @@ void checkStructure(char* fileName){
 
     if(isPNG){
         printf("%s = PNG\n", fileName);
+        hideInPng(fileName, hideFileName);
     } else if (isGIF) {
         printf("%s = GIF\n", fileName);
     } else if (isBMP) {
@@ -108,13 +162,15 @@ void readFile(char* fileName){
 
 int main(){
 
-    char filePng[] = "test.png";
+    char filePng[] = "test1.png";
     char fileGif[] = "test.gif";
     char fileBmp[] = "test.bmp";
 
-    checkStructure(filePng);
-    checkStructure(fileGif);
-    checkStructure(fileBmp);
+    char hideFile[] = "test.txt";
+
+    checkStructure(filePng, hideFile);
+    checkStructure(fileGif, hideFile);
+    checkStructure(fileBmp, hideFile);
 
     return 0;
 }
