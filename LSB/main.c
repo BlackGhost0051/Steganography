@@ -6,8 +6,8 @@ void hideInPng(char* fileName, char *hideFileName){
     unsigned char IDATStructure[] = {0x49, 0x44, 0x41, 0x54}; // IDAT 49 44 41 54
     unsigned char IHDRStructure[] = {0x49, 0x48, 0x44, 0x52}; // IHDR 49 48 44 52
     int j = 0, k = 0;
-    int idatIndex;
-    int ihdrIndex;
+    int idatIndex =  -1;
+    int ihdrIndex = -1;
 
     FILE* file = fopen(fileName,"rb");
     if(file == NULL){
@@ -16,34 +16,33 @@ void hideInPng(char* fileName, char *hideFileName){
     
 
     while((byte = fgetc(file)) != EOF){
-        if((unsigned char)byte == IDATStructure[j]){
-            j++;
-
-        
-            if(j == sizeof(IDATStructure)){
-                idatIndex = ftell(file);            // IDAT -> T byte
-                printf("\nIDAT = %d\n", idatIndex);
+        if(idatIndex == -1){
+            if((unsigned char)byte == IDATStructure[j]){
+                j++;
+                if(j == sizeof(IDATStructure)){
+                    idatIndex = ftell(file);            // IDAT -> T byte
+                    printf("\nIDAT = %d\n", idatIndex);
+                }
+            } else {
+                j = 0;
             }
-        } else {
-            j = 0;
         }
 
 
-
-        if((unsigned char)byte == IHDRStructure[k]){
-            k++;
-
-        
-            if(k == sizeof(IHDRStructure)){
-                ihdrIndex = ftell(file);            // IHDR -> R byte
-                printf("\nIHDR = %d\n", ihdrIndex);
-                for(i = 0; i < 8; i++){
-                    int nextByte = fgetc(file);
-                    printf("%d ", nextByte);
+        if(ihdrIndex == -1){
+            if((unsigned char)byte == IHDRStructure[k]){
+                k++;
+                if(k == sizeof(IHDRStructure)){
+                    ihdrIndex = ftell(file);            // IHDR -> R byte
+                    printf("\nIHDR = %d\n", ihdrIndex);
+                    for(i = 0; i < 8; i++){
+                        int nextByte = fgetc(file);
+                        printf("%d ", nextByte);
+                    }
                 }
+            } else {
+                k = 0;
             }
-        } else {
-            k = 0;
         }
     }
 
