@@ -1,5 +1,6 @@
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <png.h>
 
 void hideInPng(char* fileName, char *hideFileName){
     int byte, i;
@@ -162,14 +163,9 @@ void readFile(char* fileName){
 int main(){
 
     char filePng[] = "test1.png";
-    char fileGif[] = "test.gif";
-    char fileBmp[] = "test.bmp";
 
     char hideFile[] = "test.txt";
 
     checkStructure(filePng, hideFile);
-    checkStructure(fileGif, hideFile);
-    checkStructure(fileBmp, hideFile);
-
     return 0;
 }
