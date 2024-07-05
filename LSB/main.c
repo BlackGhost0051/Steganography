@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <png.h>
 
+#define INPUT_FILE_NAME_HIDE_IN_PNG "test1.png"
 #define OUTPUT_FILE_NAME_HIDE_IN_PNG "output.png"
+#define HIDE_FILE "test.txt"
 
-
-#define INPUT_FILE_NAME "output.png"
-#define OUTPUT_FILE_NAME "hidden_data.txt"
+#define INPUT_FILE_NAME_EXTRACT "output.png"
+#define OUTPUT_FILE_NAME_EXTRACT "hidden_data.txt"
 
 
 void hideInPng(char* fileName, char *hideFileName) {
@@ -274,9 +275,9 @@ void extractFromPng(char* fileName) {
 
     data_size = data_index / 8;
 
-    FILE *outputFile = fopen(OUTPUT_FILE_NAME, "wb");
+    FILE *outputFile = fopen(OUTPUT_FILE_NAME_EXTRACT, "wb");
     if (outputFile == NULL) {
-        printf("Failed to open output file %s\n", OUTPUT_FILE_NAME);
+        printf("Failed to open output file %s\n", OUTPUT_FILE_NAME_EXTRACT);
         for (int y = 0; y < height; y++) {
             free(row_pointers[y]);
         }
@@ -294,20 +295,16 @@ void extractFromPng(char* fileName) {
     free(row_pointers);
     free(data_buffer);
 
-    printf("Data successfully extracted and saved to %s\n", OUTPUT_FILE_NAME);
+    printf("Data successfully extracted and saved to %s\n", OUTPUT_FILE_NAME_EXTRACT);
 
     return;
 }
 
 
 int main() {
-    char inputFile[] = "test1.png";
-    char hideFile[] = "test.txt";
 
-
-
-    //hideInPng(inputFile, hideFile);
-    //extractFromPng(INPUT_FILE_NAME);
+    hideInPng(INPUT_FILE_NAME_HIDE_IN_PNG, HIDE_FILE);
+    extractFromPng(INPUT_FILE_NAME_EXTRACT);
 
     return 0;
 }
