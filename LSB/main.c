@@ -2,170 +2,91 @@
 #include <stdlib.h>
 #include <png.h>
 
-void hideInPng(char* fileName, char *hideFileName){
-    int byte, i;
-    unsigned char IDATStructure[] = {0x49, 0x44, 0x41, 0x54}; // IDAT 49 44 41 54
-    unsigned char IHDRStructure[] = {0x49, 0x48, 0x44, 0x52}; // IHDR 49 48 44 52
-    int j = 0, k = 0;
-    int idatIndex =  -1;
-    int ihdrIndex = -1;
+void hideInPng(char* fileName, char *hideFileName) {
+    int width, height;
 
-    FILE* file = fopen(fileName,"rb");
-    if(file == NULL){
-        return;
-    }
-    
-
-    while((byte = fgetc(file)) != EOF){
-        if(idatIndex == -1){
-            if((unsigned char)byte == IDATStructure[j]){
-                j++;
-                if(j == sizeof(IDATStructure)){
-                    idatIndex = ftell(file);            // IDAT -> T byte
-                    printf("\nIDAT = %d\n", idatIndex);
-                }
-            } else {
-                j = 0;
-            }
-        }
-
-
-        if(ihdrIndex == -1){
-            if((unsigned char)byte == IHDRStructure[k]){
-                k++;
-                if(k == sizeof(IHDRStructure)){
-                    ihdrIndex = ftell(file);            // IHDR -> R byte
-                    printf("\nIHDR = %d\n", ihdrIndex);
-                    for(i = 0; i < 8; i++){
-                        int nextByte = fgetc(file);
-                        printf("%d ", nextByte);
-                    }
-                }
-            } else {
-                k = 0;
-            }
-        }
-    }
-
-
-
-
-
-    fclose(file);
-    return;
-}
-
-void checkStructure(char* fileName, char *hideFileName){
-    int byte, i;
-    unsigned char fileStructure[8];
-    unsigned char pngStructure[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
-    unsigned char gifStructure[] = {0x47, 0x49, 0x46, 0x38, 0x39, 0x61};
-    unsigned char bmpStructure[] = {0x42, 0x4D};
-
-    FILE* file = fopen(fileName, "rb");
-    if(file == NULL){
-        printf("Error: File not found");
+    FILE *file = fopen(fileName, "rb");
+    if (file == NULL) {
+        printf("Failed to open the file %s.\n", fileName);
         return;
     }
 
-
-    for (i = 0; i < 8; i++) {
-        byte = fgetc(file);
-        if (byte == EOF) {
-            printf("Error: File End\n");
-            fclose(file);
-            return;
-        }
-        fileStructure[i] = (unsigned char)byte;
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png == NULL) {
+        fclose(file);
+        printf("png_create_read_struct failed\n");
+        return;
     }
 
+    png_infop info = png_create_info_struct(png);
+    if (info == NULL) {
+        png_destroy_read_struct(&png, NULL, NULL);
+        fclose(file);
+        printf("png_create_info_struct failed\n");
+        return;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_read_struct(&png, &info, NULL);
+        fclose(file);
+        printf("Error during init_io\n");
+        return;
+    }
+
+    png_init_io(png, file);
+    png_read_info(png, info);
+
+    width = png_get_image_width(png, info);
+    height = png_get_image_height(png, info);
+
+    printf("Width: %d, Height: %d\n", width, height);
+
+    png_byte color_type = png_get_color_type(png, info);
+    png_byte bit_depth = png_get_bit_depth(png, info);
+
+    if (bit_depth == 16) {
+        png_set_strip_16(png);
+    }
+    if (color_type == PNG_COLOR_TYPE_PALETTE) {
+        png_set_palette_to_rgb(png);
+    }
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+        png_set_tRNS_to_alpha(png);
+    }
+
+    png_read_update_info(png, info);
+
+    png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
+    for (int y = 0; y < height; y++) {
+        row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png, info));
+    }
+
+    png_read_image(png, row_pointers);
 
     fclose(file);
+    png_destroy_read_struct(&png, &info, NULL);
 
-    // Check PNG structure
-    int isPNG = 1;
-    for (i = 0; i < 8; i++) {
-        if (fileStructure[i] != pngStructure[i]) {
-            isPNG = 0;
-            break;
+    printf("Reading pixels:\n");
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            png_byte *ptr = &(row_pointers[y][x * 4]);
+            printf("Pixel at (%d, %d): RGBA(%d, %d, %d, %d)\n", x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
         }
     }
 
-    // Check GIF structure
-    int isGIF = 1;
-    for (i = 0; i < 6; i++) {
-        if (fileStructure[i] != gifStructure[i]) {
-            isGIF = 0;
-            break;
-        }
+    for (int y = 0; y < height; y++) {
+        free(row_pointers[y]);
     }
-
-    // Check BMP structure
-    int isBMP = 1;
-    for (i = 0; i < 2; i++) {
-        if (fileStructure[i] != bmpStructure[i]) {
-            isBMP = 0;
-            break;
-        }
-    }
-
-
-    if(isPNG){
-        printf("%s = PNG\n", fileName);
-        hideInPng(fileName, hideFileName);
-    } else if (isGIF) {
-        printf("%s = GIF\n", fileName);
-    } else if (isBMP) {
-        printf("%s = BMP\n", fileName);
-    } else {
-        printf("%s Structure not found\n", fileName);
-    }
+    free(row_pointers);
 
     return;
 }
 
-void readFile(char* fileName){
-
-    FILE* file = fopen(fileName, "rb");
-
-    if(file == NULL){
-        printf("Error open %s!\n", fileName);
-        return;
-    }
-
-    int byte;
-    int i = 0;
-    while((byte = fgetc(file)) != EOF){
-
-//        printf("%02x\t", byte);
-
-        for (int i = 7; i >= 0; i--) {
-            printf("%d", (byte >> i) & 1);
-        }
-        printf("\t");
-
-        if(i %  12 == 0){
-            printf("\n");
-        }
-        
-        i++;
-   
-        
-    }
-
-    fclose(file);
-
-    return;
-}
-
-
-
-int main(){
-
-    char filePng[] = "test1.png";
-
+int main() {
+    char inputFile[] = "test1.png";
     char hideFile[] = "test.txt";
 
-    checkStructure(filePng, hideFile);
+    hideInPng(inputFile, hideFile);
+    
     return 0;
 }
